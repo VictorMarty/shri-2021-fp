@@ -14,27 +14,10 @@
  * Если какие либо функции написаны руками (без использования библиотек) это не является ошибкой
  */
 
-import {add, apply, compose, prop, anyPass, allPass, curry, equals, tap, tryCatch, applySpec, reduce, gte, lte, filter, eqProps,} from "ramda"
 
-// try\catch
-// const createSafeFunction = (fn) => tryCatch(fn, log)
-
-// const printToConsole = console.log
-// const log = (color, type, message) => printToConsole("c" + `[${type}]: ${message}`, "color:" + color + ";font-weight:bold;");
-
-// const curriedLog = curry(log)
-// const logBlackColor = curriedLog("black")
-// const logRedColor = curriedLog("red")
-// const logError = curriedLog("ERR")
-// const logInfoMessage = compose(logInfo, getMessage);
-// const logInfo = curriedLog("INF")
-
-// const logFalse = logError("Not Cool")
-// const logErrorMessage = compose(logError, getMessage);
-// Проверка условий
+import {not, values, apply, compose, prop, allPass, curry, equals, applySpec, lte, filter, converge, max,} from "ramda"
 
 // Гетеры
-const getMessage = prop('message')
 const count = prop('length')
 const getColor = prop
 const starColor = getColor('star')
@@ -42,68 +25,78 @@ const squareColor = getColor('square')
 const triangleColor = getColor('triangle')
 const circleColor = getColor('circle')
 
-const greenColor = prop("green")
-const blueColor = prop('blue')
-const whiteColor = prop('white')
-const redColor = prop('red')
-// проверка цвета
 const isWhite = equals('white')
 const isGreen = equals('green')
 const isRed = equals('red')
 const isBlue = equals('blue')
+const isOrange = equals('orange')
 
-// Фигура с цветом
+const notWhite = compose(not, isWhite)
 
 const redStar = compose(isRed, starColor)
+const greenTriangle = compose(isGreen, triangleColor)
 const greenSquare = compose(isGreen, squareColor)
-const whiteTriangle = compose(isWhite, triangleColor)
-const whiteCircle = compose(isWhite, circleColor)
+const whiteStar = compose(isWhite, starColor)
+const orangeSquare = compose(isOrange, squareColor)
+const blueCircle = compose(isBlue, circleColor)
 
+const notRedStar = compose(not, redStar)
+const notWhiteStar = compose(not, whiteStar)
 
-const minimum = curry(lte)
-const curryEquals =curry(equals)
+const notWhiteFigures = filter(notWhite)
+
 const countGreenFigures = compose(count, filter(isGreen), Object.values)
 const countRedFigures = compose(count, filter(isRed), Object.values)
 const countBlueFigures = compose(count, filter(isBlue), Object.values)
 const countWhiteFigures = compose(count, filter(isWhite), Object.values)
+const countOrangeFigures = compose(count, filter(isOrange), Object.values)
 const countColors = applySpec({
     blue: countBlueFigures,
     red: countRedFigures,
     green: countGreenFigures,
-    white: countWhiteFigures
+    white: countWhiteFigures,
+    orange: countOrangeFigures
 })
 
-const countRedAndBlue = compose(Object.values,applySpec([countRedFigures,countBlueFigures]))
-const equalsRed = equals(countRedFigures)
+const twoGreenFigures = compose(equals(2),countGreenFigures)
+const oneRedFigure = compose(equals(1), countRedFigures)
+const twoWhiteFigures = compose(equals(2),countWhiteFigures)
+
+const minimum = curry(lte)
+const equally = converge(equals)
 
 // 1. Красная звезда, зеленый квадрат, все остальные белые.
-export const validateFieldN1 = allPass([redStar,greenSquare,whiteTriangle,whiteCircle])
+export const validateFieldN1 = allPass([redStar,greenSquare,twoWhiteFigures])
+
 // 2. Как минимум две фигуры зеленые.
 export const validateFieldN2 = compose(minimum(2),countGreenFigures)
+
 // 3. Количество красных фигур равно кол-ву синих.
-// export const validateFieldN3 = allPass([equals(countRedFigures, countBlueFigures)])
-export const validateFieldN3 = compose(
-    console.log,
-    curryEquals(redColor, blueColor),
-    countColors
-)
+export const validateFieldN3 = equally([countRedFigures, countBlueFigures])
+
 // 4. Синий круг, красная звезда, оранжевый квадрат
-export const validateFieldN4 = () => false;
+export const validateFieldN4 = allPass([redStar,orangeSquare,blueCircle])
 
 // 5. Три фигуры одного любого цвета кроме белого (четыре фигуры одного цвета – это тоже true).
-export const validateFieldN5 = () => false;
+export const validateFieldN5 = compose(
+    minimum(3),
+    apply(max),
+    values,
+    countColors,
+    notWhiteFigures,
+)
 
 // 6. Две зеленые фигуры (одна из них треугольник), еще одна любая красная.
-export const validateFieldN6 = () => false;
+export const validateFieldN6 = allPass([twoGreenFigures,greenTriangle,oneRedFigure])
 
 // 7. Все фигуры оранжевые.
-export const validateFieldN7 = () => false;
+export const validateFieldN7 = compose(equals(4),countOrangeFigures)
 
 // 8. Не красная и не белая звезда.
-export const validateFieldN8 = () => false;
+export const validateFieldN8 = allPass([notRedStar,notWhiteStar])
 
 // 9. Все фигуры зеленые.
-export const validateFieldN9 = () => false;
+export const validateFieldN9 = compose(equals(4),countGreenFigures)
 
 // 10. Треугольник и квадрат одного цвета (не белого)
-export const validateFieldN10 = () => false;
+export const validateFieldN10 = equally([triangleColor, squareColor])
