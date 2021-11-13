@@ -15,7 +15,7 @@
  */
 
 
-import {not, values, apply, compose, prop, allPass, curry, equals, applySpec, lte, filter, converge, max,} from "ramda"
+import {not, values,  compose, prop, allPass, curry, equals, applySpec, lte, filter, converge, max, reduce,} from "ramda"
 
 // Гетеры
 const count = prop('length')
@@ -80,7 +80,7 @@ export const validateFieldN4 = allPass([redStar,orangeSquare,blueCircle])
 // 5. Три фигуры одного любого цвета кроме белого (четыре фигуры одного цвета – это тоже true).
 export const validateFieldN5 = compose(
     minimum(3),
-    apply(max),
+    reduce(max,-Infinity),
     values,
     countColors,
     notWhiteFigures,
@@ -99,4 +99,9 @@ export const validateFieldN8 = allPass([notRedStar,notWhiteStar])
 export const validateFieldN9 = compose(equals(4),countGreenFigures)
 
 // 10. Треугольник и квадрат одного цвета (не белого)
-export const validateFieldN10 = equally([triangleColor, squareColor])
+export const validateFieldN10 = allPass([
+    equally([triangleColor, squareColor]),
+    compose(notWhite,triangleColor),
+    compose(notWhite,squareColor),
+])
+
